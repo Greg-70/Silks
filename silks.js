@@ -178,7 +178,18 @@ var lineFunction = d3.svg.line()
 	.interpolate("basis-closed");
 	
 var baseGroup = svgContainer.append("g");
-var bodyPath = baseGroup.append("path").attr("id", "body-clip").attr("d", lineFunction(bodyData));
+var bodyGroup = baseGroup.append("g").attr("id", "bodyGroup");
+var bodyPath = bodyGroup.append("path").attr("d", lineFunction(bodyData));
+
+var bodyMask = svgContainer.append("defs")
+	.append("mask")
+	.attr("id", "bodyMask")
+	.append("path")
+	.attr("d", lineFunction(bodyData))
+	.attr("stroke","black")
+	.attr("stroke-width", 1.5)
+	.style("fill", "white");
+
 var collarPath = baseGroup.append("path").attr("d", lineFunction(collarData));
 var leftSleevePath = baseGroup.append("path").attr("d", lineFunction(leftSleeveData));
 var rightSleevePath = baseGroup.append("path").attr("d", lineFunction(rightSleeveData));
@@ -203,6 +214,7 @@ function setPattern(pType, pAreaName, pArea) {
 		return;
 	
 	var colours = [];
+	svgContainer.selectAll("pattern").remove();
 	
 	if (pAreaName === 'Body') {
 		colours = [ $("#bodyColour").val(), $("#bodyColour2").val() ];
@@ -211,36 +223,44 @@ function setPattern(pType, pAreaName, pArea) {
 	}
 	
 	if (pType === 'Block') {
+		var pattern = svgContainer.append("pattern")
+            .attr("id", "blockPattern")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", 40)
+			.attr("height", 40)
+			.attr("patternTransform", "translate(5,10)");
+		pattern.append("rect")
+            .attr("height", 20)
+            .attr("width", 20)
+			.attr("fill", colours[0]);
+		pattern.append("rect")
+			.attr("x", 20)
+            .attr("height", 20)
+            .attr("width", 20)
+			.attr("fill", colours[1]);
+		pattern.append("rect")
+			.attr("y", 20)
+            .attr("height", 20)
+            .attr("width", 20)
+			.attr("fill", colours[1]);
+		pattern.append("rect")
+			.attr("x", 20)
+			.attr("y", 20)
+            .attr("height", 20)
+            .attr("width", 20)
+			.attr("fill", colours[0]);
 		
-		/***
-		var pattern = canvas.pattern(20, 20, function(add) {
-				add.rect(20,20).fill(colours[0])
-				add.rect(10,10).fill(colours[1])
-				add.rect(10,10).move(10,10).fill(colours[1])
-		})
-		pArea.fill(pattern)
-		***/
+		pArea.style("fill", "url(#blockPattern)");
 	}
 	else if (pType === 'Stripe') {
-		bodyPath.append("rect")
-			.attr("x", 125)
-			.attr("y", 75)
-			.attr("clip-path", "url(#body-clip)")
-			.style("fill", "lightgrey")
+		bodyGroup.append("rect")
+			.attr("id", "stripePattern")
+			.attr("x", 108)
+			.attr("y", 80)
+			.attr("width", 53)
 			.attr("height", 194) 
-			.attr("width", 54);  
-			
-		/***		
-		var cx = pArea.cx()
-		var cy = pArea.cy()
-		var stripe = canvas.rect(54, 194).fill(colours[1])
-		stripe.center(cx, cy)
-		
-		var df = canvas.defs()
-		var bPath = df.path(pArea.array())
-		bPath.stroke(strokeStyle)
-		bPath.maskWith(stripe)
-		***/
+			.attr("mask", "url(#bodyMask)")
+			.attr("fill", colours[1]);
 	}
 }
 
